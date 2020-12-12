@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
@@ -24,9 +25,28 @@ func aboutHandler(w http.ResponseWriter, r *http.Request) {
 		"<a href=\"mailto:summer@example.com\">summer@example.com</a>")
 }
 
+// 使用 go 自带的 NewServeMux, 需要判断 GET 或者 POST 方法
+func articlesHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		fmt.Fprint(w, "访问文章列表")
+	case "POST":
+		fmt.Fprint(w, "创建文章")
+	}
+}
+
+// 使用 go 自带的 NewServeMux, 需要用切割的方法判断参数
+func articleHandler(w http.ResponseWriter, r *http.Request) {
+	id := strings.SplitN(r.URL.Path, "/", 3)[2]
+	fmt.Fprint(w, "文章 id："+id)
+
+}
+
 func main() {
 	router := http.NewServeMux()
 	router.HandleFunc("/", defaultHandler)
 	router.HandleFunc("/about", aboutHandler)
+	router.HandleFunc("/articles", articlesHandler)
+	router.HandleFunc("/article/", articleHandler)
 	http.ListenAndServe(":3000", router)
 }
