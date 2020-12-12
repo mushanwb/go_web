@@ -25,7 +25,8 @@ func aboutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/", defaultHandler)
-	http.HandleFunc("/about", aboutHandler)
-	http.ListenAndServe(":3000", nil)
+	router := http.NewServeMux()
+	router.HandleFunc("/", defaultHandler)
+	router.HandleFunc("/about", aboutHandler)
+	http.ListenAndServe(":3000", router)
 }
