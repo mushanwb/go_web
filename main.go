@@ -51,7 +51,18 @@ func articlesCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "创建新的文章")
+	err := r.ParseForm()
+	if err != nil {
+		fmt.Fprint(w, "请提供正确的数据")
+		return
+	}
+
+	//在使用之前需要调用 ParseForm 方法
+	title := r.PostForm.Get("title")
+
+	fmt.Fprintf(w, "POST PostForm: %v <br>", r.PostForm)
+	fmt.Fprintf(w, "POST Form: %v <br>", r.PostFormValue("title"))
+	fmt.Fprintf(w, "title 的值为: %v", title)
 }
 
 func notFoundHandler(w http.ResponseWriter, r *http.Request) {
