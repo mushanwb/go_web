@@ -53,6 +53,18 @@ func checkError(err error) {
 	}
 }
 
+// 创建 articles 数据表
+func createTables() {
+	createArticlesSQL := `CREATE TABLE IF NOT EXISTS articles(
+    id bigint(20) PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    title varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+    body longtext COLLATE utf8mb4_unicode_ci
+); `
+
+	_, err := db.Exec(createArticlesSQL)
+	checkError(err)
+}
+
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "<h1>Hello, 欢迎来到 goblog！</h1>")
 }
@@ -168,6 +180,8 @@ func removeTrailingSlash(next http.Handler) http.Handler {
 func main() {
 	//初始化数据库
 	initDB()
+	// 初始化数据表
+	createTables()
 
 	// 后面的 Name 属性是给路由命名,和 laravel 路由的 name 属性差不多
 	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
