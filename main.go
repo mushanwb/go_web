@@ -1,17 +1,57 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"html/template"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 // 使用 精准匹配 的 gorilla/mux
 var router = mux.NewRouter()
+
+// 数据库
+var db *sql.DB
+
+func initDB() {
+	var err error
+	config := mysql.Config{
+		User:                 "homestead",
+		Passwd:               "secret",
+		Addr:                 "192.168.10.10:3306",
+		Net:                  "tcp",
+		DBName:               "go_web",
+		AllowNativePasswords: true,
+	}
+
+	//准备数据库连接池
+	db, err = sql.Open("mysql", config.FormatDSN())
+	checkError(err)
+
+	// 设置最大连接数
+	db.SetMaxOpenConns(25)
+	// 设置最大空闲连接数
+	db.SetMaxIdleConns(25)
+	// 设置每个链接的过期时间
+	db.SetConnMaxLifetime(5 * time.Minute)
+
+	// 尝试连接，失败会报错
+	err = db.Ping()
+	checkError(err)
+}
+
+func checkError(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "<h1>Hello, 欢迎来到 goblog！</h1>")
@@ -126,6 +166,8 @@ func removeTrailingSlash(next http.Handler) http.Handler {
 }
 
 func main() {
+	//初始化数据库
+	initDB()
 
 	// 后面的 Name 属性是给路由命名,和 laravel 路由的 name 属性差不多
 	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
