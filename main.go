@@ -343,7 +343,7 @@ func notFoundHandler(w http.ResponseWriter, r *http.Request) {
 func forceHTMLMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// 设置返回头的数据格式
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Content-Type", "application/json")
 		// 继续处理请求
 		next.ServeHTTP(w, r)
 	})
