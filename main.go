@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
@@ -68,7 +69,7 @@ func createTables() {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "<h1>Hello, 欢迎来到 goblog！</h1>")
+	w.Write(ReturnJson(200, "首页访问", nil))
 }
 
 func aboutHandler(w http.ResponseWriter, r *http.Request) {
@@ -108,6 +109,18 @@ func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
 type Article struct {
 	Title, Body string
 	ID          int64
+}
+
+// 返回的 json 数据格式
+type JsonResult struct {
+	Code    int32       `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
+func ReturnJson(code int32, message string, data interface{}) []byte {
+	jsonData, _ := json.Marshal(JsonResult{code, message, data})
+	return jsonData
 }
 
 func articlesIndexHandler(w http.ResponseWriter, r *http.Request) {
