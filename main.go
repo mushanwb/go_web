@@ -7,6 +7,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
+	"go_web/route"
 	"log"
 	"net/http"
 	"strconv"
@@ -14,9 +15,6 @@ import (
 	"time"
 	"unicode/utf8"
 )
-
-// 使用 精准匹配 的 gorilla/mux
-var router = mux.NewRouter()
 
 // 数据库
 var db *sql.DB
@@ -359,6 +357,9 @@ func main() {
 	initDB()
 	// 初始化数据表
 	createTables()
+
+	route.Initialize()
+	router := route.Router
 
 	// 后面的 Name 属性是给路由命名,和 laravel 路由的 name 属性差不多
 	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
