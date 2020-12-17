@@ -7,10 +7,8 @@ import (
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
-	"html/template"
 	"log"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -119,23 +117,6 @@ func articlesIndexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "访问文章列表")
 }
 
-func articlesCreateHandler(w http.ResponseWriter, r *http.Request) {
-	// 将提交的数据发送给 articles.store 这个路由
-	storeURL, _ := router.Get("articles.store").URL()
-	data := ArticlesFormData{
-		Title:  "",
-		Body:   "",
-		URL:    storeURL,
-		Errors: nil,
-	}
-	tmpl, err := template.ParseFiles("resources/views/articles/create.gohtml")
-	if err != nil {
-		panic(err)
-	}
-
-	tmpl.Execute(w, data)
-}
-
 func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
 	// 使用这种方法，可以将接收的 application/json 数据转化为 map
 	//param, _ := ioutil.ReadAll(r.Body)
@@ -198,48 +179,6 @@ func saveArticleToDB(title string, body string) (int64, error) {
 	return 0, err
 }
 
-// ArticlesFormData 创建博文表单数据
-type ArticlesFormData struct {
-	Title, Body string
-	URL         *url.URL
-	Errors      map[string]string
-}
-
-func articlesEditHandler(w http.ResponseWriter, r *http.Request) {
-	// 获取 url 参数
-	id := getRouteVariable("id", r)
-
-	// 读取对应的文章数据
-	article, err := getArticleByID(id)
-
-	// 如果出现错误
-	if err != nil {
-		if err == sql.ErrNoRows {
-			// 3.1 数据未找到
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprint(w, "404 文章未找到")
-		} else {
-			// 3.2 数据库错误
-			checkError(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "500 服务器内部错误")
-		}
-	} else {
-		// 4. 读取成功，显示表单
-		updateURL, _ := router.Get("articles.update").URL("id", id)
-		data := ArticlesFormData{
-			Title:  article.Title,
-			Body:   article.Body,
-			URL:    updateURL,
-			Errors: nil,
-		}
-		tmpl, err := template.ParseFiles("resources/views/articles/edit.gohtml")
-		checkError(err)
-
-		tmpl.Execute(w, data)
-	}
-}
-
 func getRouteVariable(parameterName string, r *http.Request) string {
 	vars := mux.Vars(r)
 	return vars[parameterName]
@@ -256,19 +195,19 @@ func getArticleByID(id string) (Article, error) {
 func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	id := getRouteVariable("id", r)
 
-	_, err := getArticleByID(id)
+	article, err := getArticleByID(id)
 
 	// 如果出现错误
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// 3.1 数据未找到
 			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprint(w, "404 文章未找到")
+			w.Write(ReturnJson("文章不存在", nil))
 		} else {
 			// 3.2 数据库错误
 			checkError(err)
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "500 服务器内部错误")
+			w.Write(ReturnJson("文章查询失败", nil))
 		}
 	} else {
 		// 4.1 表单验证
@@ -286,31 +225,18 @@ func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				checkError(err)
 				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprint(w, "500 服务器内部错误")
+				w.Write(ReturnJson("文章更改失败", nil))
 			}
 
 			// √ 更新成功，跳转到文章详情页
 			if n, _ := rs.RowsAffected(); n > 0 {
-				showURL, _ := router.Get("articles.show").URL("id", id)
-				http.Redirect(w, r, showURL.String(), http.StatusFound)
+				w.Write(ReturnJson("文章更改成功", Article{article.ID, title, body}))
 			} else {
-				fmt.Fprint(w, "您没有做任何更改！")
+				w.Write(ReturnJson("文章没有任何改动", article))
 			}
 		} else {
-
-			// 4.3 表单验证不通过，显示理由
-
-			updateURL, _ := router.Get("articles.update").URL("id", id)
-			data := ArticlesFormData{
-				Title:  title,
-				Body:   body,
-				URL:    updateURL,
-				Errors: errors,
-			}
-			tmpl, err := template.ParseFiles("resources/views/articles/edit.gohtml")
-			checkError(err)
-
-			tmpl.Execute(w, data)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(ReturnJson("参数错误", errors))
 		}
 	}
 }
@@ -335,6 +261,7 @@ func validateArticleFormData(title string, body string) map[string]string {
 }
 
 func notFoundHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusNotFound)
 	fmt.Fprint(w, "<h1>请求页面未找到 :(</h1><p>如有疑惑，请联系我们。</p>")
 }
@@ -373,9 +300,7 @@ func main() {
 	// 同名的路由,根据请求的方式不同，选择进入不同的函数
 	router.HandleFunc("/articles", articlesIndexHandler).Methods("GET").Name("articles.index")
 	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store")
-	router.HandleFunc("/articles/create", articlesCreateHandler).Methods("GET").Name("articles.create")
-	router.HandleFunc("/articles/{id:[0-9]+}/edit", articlesEditHandler).Methods("GET").Name("articles.edit")
-	router.HandleFunc("/articles/{id:[0-9]+}", articlesUpdateHandler).Methods("POST").Name("articles.update")
+	router.HandleFunc("/articles/{id:[0-9]+}", articlesUpdateHandler).Methods("PUT").Name("articles.update")
 
 	// 自定义 404 页面
 	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
