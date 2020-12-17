@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -259,6 +260,56 @@ func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func articlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	id := getRouteVariable("id", r)
+
+	article, err := getArticleByID(id)
+
+	// 如果出现错误
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// 3.1 数据未找到
+			w.WriteHeader(http.StatusNotFound)
+			w.Write(ReturnJson("文章不存在", nil))
+		} else {
+			// 3.2 数据库错误
+			checkError(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(ReturnJson("文章查询失败", nil))
+		}
+	} else {
+		rowsAffected, err := article.Delete()
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(ReturnJson("删除文章失败", nil))
+		} else {
+			// 4.2 未发生错误
+			if rowsAffected > 0 {
+				w.Write(ReturnJson("文章删除成功", article))
+			} else {
+				// Edge case
+				w.WriteHeader(http.StatusNotFound)
+				w.Write(ReturnJson("文章不存在", nil))
+			}
+		}
+	}
+}
+
+func (a Article) Delete() (rowsAffected int64, err error) {
+	rs, err := db.Exec("DELETE FROM articles WHERE id = " + strconv.FormatInt(a.ID, 10))
+	if err != nil {
+		return 0, err
+	}
+
+	// 删除成功
+	if n, _ := rs.RowsAffected(); n > 0 {
+		return n, nil
+	}
+
+	return 0, nil
+}
+
 func validateArticleFormData(title string, body string) map[string]string {
 	errors := make(map[string]string)
 	// 验证标题
@@ -319,6 +370,7 @@ func main() {
 	router.HandleFunc("/articles", articlesIndexHandler).Methods("GET").Name("articles.index")
 	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store")
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesUpdateHandler).Methods("PUT").Name("articles.update")
+	router.HandleFunc("/articles/{id:[0-9]+}", articlesDeleteHandler).Methods("DELETE").Name("articles.delete")
 
 	// 自定义 404 页面
 	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
