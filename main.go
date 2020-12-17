@@ -11,7 +11,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -69,12 +68,7 @@ func createTables() {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write(ReturnJson(200, "首页访问", nil))
-}
-
-func aboutHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "此博客是用以记录编程笔记，如您有反馈或建议，请联系 "+
-		"<a href=\"mailto:summer@example.com\">summer@example.com</a>")
+	w.Write(ReturnJson("首页访问", nil))
 }
 
 func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
@@ -89,37 +83,35 @@ func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
 		if err == sql.ErrNoRows {
 			// 数据没找到
 			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprint(w, "404 文章没找到")
+			w.Write(ReturnJson("文章不存在", nil))
 		} else {
 			// 数据库错误
 			checkError(err)
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "500 服务器错误")
+			w.Write(ReturnJson("查询文章失败", nil))
 		}
 	} else {
 		// 4. 读取成功，显示文章
-		tmpl, err := template.ParseFiles("resources/views/articles/show.gohtml")
 		checkError(err)
-
-		tmpl.Execute(w, article)
+		w.Write(ReturnJson("请求成功", article))
 	}
 }
 
 // Article  对应一条文章数据
 type Article struct {
-	Title, Body string
-	ID          int64
+	ID    int64  `json:"id"`
+	Title string `json:"title"`
+	Body  string `json:"body"`
 }
 
 // 返回的 json 数据格式
 type JsonResult struct {
-	Code    int32       `json:"code"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
 }
 
-func ReturnJson(code int32, message string, data interface{}) []byte {
-	jsonData, _ := json.Marshal(JsonResult{code, message, data})
+func ReturnJson(message string, data interface{}) []byte {
+	jsonData, _ := json.Marshal(JsonResult{message, data})
 	return jsonData
 }
 
@@ -145,6 +137,13 @@ func articlesCreateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
+	// 使用这种方法，可以将接收的 application/json 数据转化为 map
+	//param, _ := ioutil.ReadAll(r.Body)
+	//m := make(map[string]interface{})
+	//json.Unmarshal(param, &m)
+
+	// 使用下面的方法，将只能接收 from-data 或者 application/x-www-form-urlencoded 格式数据
+	// 接收不到 application/json 数据
 	title := r.PostFormValue("title")
 	body := r.PostFormValue("body")
 
@@ -154,27 +153,15 @@ func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
 	if len(errors) == 0 {
 		lastInsertID, err := saveArticleToDB(title, body)
 		if lastInsertID > 0 {
-			fmt.Fprint(w, "插入成功，ID 为"+strconv.FormatInt(lastInsertID, 10))
+			w.Write(ReturnJson("插入文章成功", Article{lastInsertID, title, body}))
 		} else {
 			checkError(err)
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "500 服务器内部错误")
+			w.Write(ReturnJson("插入文章失败", nil))
 		}
 	} else {
-		storeURL, _ := router.Get("articles.store").URL()
-
-		data := ArticlesFormData{
-			Title:  title,
-			Body:   body,
-			URL:    storeURL,
-			Errors: errors,
-		}
-		tmpl, err := template.ParseFiles("resources/views/articles/create.gohtml")
-		if err != nil {
-			panic(err)
-		}
-
-		tmpl.Execute(w, data)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(ReturnJson("请求参数错误", errors))
 	}
 }
 
@@ -379,7 +366,6 @@ func main() {
 
 	// 后面的 Name 属性是给路由命名,和 laravel 路由的 name 属性差不多
 	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
-	router.HandleFunc("/about", aboutHandler).Methods("GET").Name("about")
 
 	// 取 文章id 可以使用路由正则匹配
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesShowHandler).Methods("GET").Name("articles.show")
