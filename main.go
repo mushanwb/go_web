@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gorilla/mux"
 	"go_web/route"
 	"log"
 	"net/http"
@@ -70,7 +69,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
 	// 获取 url 上的 id 参数
-	id := getRouteVariable("id", r)
+	id := route.GetRouteVariable("id", r)
 
 	// 读取对应文章的数据
 	article, err := getArticleByID(id)
@@ -196,11 +195,6 @@ func saveArticleToDB(title string, body string) (int64, error) {
 	return 0, err
 }
 
-func getRouteVariable(parameterName string, r *http.Request) string {
-	vars := mux.Vars(r)
-	return vars[parameterName]
-}
-
 func getArticleByID(id string) (Article, error) {
 	article := Article{}
 	query := "SELECT * FROM articles WHERE id = ?"
@@ -210,7 +204,7 @@ func getArticleByID(id string) (Article, error) {
 }
 
 func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
-	id := getRouteVariable("id", r)
+	id := route.GetRouteVariable("id", r)
 
 	article, err := getArticleByID(id)
 
@@ -259,7 +253,7 @@ func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func articlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	id := getRouteVariable("id", r)
+	id := route.GetRouteVariable("id", r)
 
 	article, err := getArticleByID(id)
 
