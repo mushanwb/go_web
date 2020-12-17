@@ -114,7 +114,25 @@ func ReturnJson(message string, data interface{}) []byte {
 }
 
 func articlesIndexHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "访问文章列表")
+	rows, err := db.Query("select * from articles")
+	checkError(err)
+	defer rows.Close()
+
+	var articles []Article
+
+	// 循环读取结果
+	for rows.Next() {
+		var article Article
+		// 扫码每一行结果并赋值到一个 article 对象中
+		err := rows.Scan(&article.ID, &article.Title, &article.Body)
+		checkError(err)
+		articles = append(articles, article)
+	}
+
+	// 检测遍历时是否发生错误
+	err = rows.Err()
+	checkError(err)
+	w.Write(ReturnJson("文章列表查询成功", articles))
 }
 
 func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
@@ -305,7 +323,7 @@ func main() {
 	// 自定义 404 页面
 	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 
-	// 中间件：强制内容类型为 HTML
+	// 中间件：强制内容类型为 JSON
 	router.Use(forceHTMLMiddleware)
 
 	// 通过命名路由获取 URL 示例
