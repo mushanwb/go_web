@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
+	"go_web/pkg/logger"
 	"go_web/route"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -31,7 +31,7 @@ func initDB() {
 
 	//准备数据库连接池
 	db, err = sql.Open("mysql", config.FormatDSN())
-	checkError(err)
+	logger.LogError(err)
 
 	// 设置最大连接数
 	db.SetMaxOpenConns(25)
@@ -42,13 +42,7 @@ func initDB() {
 
 	// 尝试连接，失败会报错
 	err = db.Ping()
-	checkError(err)
-}
-
-func checkError(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
+	logger.LogError(err)
 }
 
 // 创建 articles 数据表
@@ -60,7 +54,7 @@ func createTables() {
 ); `
 
 	_, err := db.Exec(createArticlesSQL)
-	checkError(err)
+	logger.LogError(err)
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -82,13 +76,13 @@ func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write(ReturnJson("文章不存在", nil))
 		} else {
 			// 数据库错误
-			checkError(err)
+			logger.LogError(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(ReturnJson("查询文章失败", nil))
 		}
 	} else {
 		// 4. 读取成功，显示文章
-		checkError(err)
+		logger.LogError(err)
 		w.Write(ReturnJson("请求成功", article))
 	}
 }
@@ -113,7 +107,7 @@ func ReturnJson(message string, data interface{}) []byte {
 
 func articlesIndexHandler(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query("select * from articles")
-	checkError(err)
+	logger.LogError(err)
 	defer rows.Close()
 
 	var articles []Article
@@ -123,13 +117,13 @@ func articlesIndexHandler(w http.ResponseWriter, r *http.Request) {
 		var article Article
 		// 扫码每一行结果并赋值到一个 article 对象中
 		err := rows.Scan(&article.ID, &article.Title, &article.Body)
-		checkError(err)
+		logger.LogError(err)
 		articles = append(articles, article)
 	}
 
 	// 检测遍历时是否发生错误
 	err = rows.Err()
-	checkError(err)
+	logger.LogError(err)
 	w.Write(ReturnJson("文章列表查询成功", articles))
 }
 
@@ -152,7 +146,7 @@ func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
 		if lastInsertID > 0 {
 			w.Write(ReturnJson("插入文章成功", Article{lastInsertID, title, body}))
 		} else {
-			checkError(err)
+			logger.LogError(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(ReturnJson("插入文章失败", nil))
 		}
@@ -216,7 +210,7 @@ func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write(ReturnJson("文章不存在", nil))
 		} else {
 			// 3.2 数据库错误
-			checkError(err)
+			logger.LogError(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(ReturnJson("文章查询失败", nil))
 		}
@@ -234,7 +228,7 @@ func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			rs, err := db.Exec(query, title, body, id)
 
 			if err != nil {
-				checkError(err)
+				logger.LogError(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write(ReturnJson("文章更改失败", nil))
 			}
@@ -265,7 +259,7 @@ func articlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write(ReturnJson("文章不存在", nil))
 		} else {
 			// 3.2 数据库错误
-			checkError(err)
+			logger.LogError(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(ReturnJson("文章查询失败", nil))
 		}
