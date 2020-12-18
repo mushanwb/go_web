@@ -11,6 +11,7 @@ var Router *mux.Router
 // Initialize 初始化路由
 func Initialize() {
 	Router = mux.NewRouter()
+	RegisterWebRoutes(Router)
 }
 
 // 获取路由参数

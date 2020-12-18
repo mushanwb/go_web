@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"go_web/database"
 	"go_web/pkg/logger"
@@ -274,12 +273,6 @@ func validateArticleFormData(title string, body string) map[string]string {
 	return errors
 }
 
-func notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusNotFound)
-	fmt.Fprint(w, "<h1>请求页面未找到 :(</h1><p>如有疑惑，请联系我们。</p>")
-}
-
 // 中间件,给每个请求头设置返回头数据格式
 func forceHTMLMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -308,9 +301,6 @@ func main() {
 	route.Initialize()
 	router := route.Router
 
-	// 后面的 Name 属性是给路由命名,和 laravel 路由的 name 属性差不多
-	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
-
 	// 取 文章id 可以使用路由正则匹配
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesShowHandler).Methods("GET").Name("articles.show")
 
@@ -319,9 +309,6 @@ func main() {
 	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store")
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesUpdateHandler).Methods("PUT").Name("articles.update")
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesDeleteHandler).Methods("DELETE").Name("articles.delete")
-
-	// 自定义 404 页面
-	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 
 	// 中间件：强制内容类型为 JSON
 	router.Use(forceHTMLMiddleware)
