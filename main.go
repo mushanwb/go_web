@@ -7,9 +7,9 @@ import (
 	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"go_web/pkg/logger"
+	"go_web/pkg/types"
 	"go_web/route"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -283,7 +283,7 @@ func articlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a Article) Delete() (rowsAffected int64, err error) {
-	rs, err := db.Exec("DELETE FROM articles WHERE id = " + strconv.FormatInt(a.ID, 10))
+	rs, err := db.Exec("DELETE FROM articles WHERE id = " + types.Int64ToString(a.ID))
 	if err != nil {
 		return 0, err
 	}
