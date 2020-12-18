@@ -4,58 +4,17 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
+	"go_web/database"
 	"go_web/pkg/logger"
 	"go_web/pkg/types"
 	"go_web/route"
 	"net/http"
 	"strings"
-	"time"
 	"unicode/utf8"
 )
 
-// 数据库
 var db *sql.DB
-
-func initDB() {
-	var err error
-	config := mysql.Config{
-		User:                 "homestead",
-		Passwd:               "secret",
-		Addr:                 "192.168.10.10:3306",
-		Net:                  "tcp",
-		DBName:               "go_web",
-		AllowNativePasswords: true,
-	}
-
-	//准备数据库连接池
-	db, err = sql.Open("mysql", config.FormatDSN())
-	logger.LogError(err)
-
-	// 设置最大连接数
-	db.SetMaxOpenConns(25)
-	// 设置最大空闲连接数
-	db.SetMaxIdleConns(25)
-	// 设置每个链接的过期时间
-	db.SetConnMaxLifetime(5 * time.Minute)
-
-	// 尝试连接，失败会报错
-	err = db.Ping()
-	logger.LogError(err)
-}
-
-// 创建 articles 数据表
-func createTables() {
-	createArticlesSQL := `CREATE TABLE IF NOT EXISTS articles(
-    id bigint(20) PRIMARY KEY AUTO_INCREMENT NOT NULL,
-    title varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-    body longtext COLLATE utf8mb4_unicode_ci
-); `
-
-	_, err := db.Exec(createArticlesSQL)
-	logger.LogError(err)
-}
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(ReturnJson("首页访问", nil))
@@ -341,10 +300,10 @@ func removeTrailingSlash(next http.Handler) http.Handler {
 }
 
 func main() {
-	//初始化数据库
-	initDB()
-	// 初始化数据表
-	createTables()
+
+	// 初始化数据库
+	database.Initialize()
+	db = database.DB
 
 	route.Initialize()
 	router := route.Router
