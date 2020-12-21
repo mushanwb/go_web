@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	_ "github.com/go-sql-driver/mysql"
+	"go_web/bootstrap"
 	"go_web/database"
 	"go_web/pkg/logger"
 	"go_web/pkg/types"
@@ -298,8 +299,7 @@ func main() {
 	database.Initialize()
 	db = database.DB
 
-	route.Initialize()
-	router := route.Router
+	router := bootstrap.SetupRoute()
 
 	// 取 文章id 可以使用路由正则匹配
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesShowHandler).Methods("GET").Name("articles.show")
