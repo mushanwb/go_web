@@ -2,7 +2,7 @@ package route
 
 import (
 	"github.com/gorilla/mux"
-	"go_web/app/http/controllers/views"
+	"go_web/app/http/views"
 	"net/http"
 )
 
