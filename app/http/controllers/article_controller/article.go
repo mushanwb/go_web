@@ -6,6 +6,7 @@ import (
 	"go_web/app/http/modles/article_modle"
 	"go_web/pkg/logger"
 	"go_web/pkg/route"
+	"go_web/pkg/types"
 	"net/http"
 	"unicode/utf8"
 )
@@ -85,6 +86,57 @@ func (*ArticleController) ArticlesStoreHandler(w http.ResponseWriter, r *http.Re
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(entity.ReturnJson("请求参数错误", errors))
+	}
+}
+
+func (*ArticleController) ArticlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
+	id := route.GetRouteVariable("id", r)
+
+	_, err := article_modle.Get(id)
+
+	// 如果出现错误
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// 3.1 数据未找到
+			w.WriteHeader(http.StatusNotFound)
+			w.Write(entity.ReturnJson("文章不存在", nil))
+		} else {
+			// 3.2 数据库错误
+			logger.LogError(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(entity.ReturnJson("文章查询失败", nil))
+		}
+	} else {
+		// 4.1 表单验证
+		title := r.PostFormValue("title")
+		body := r.PostFormValue("body")
+
+		errors := validateArticleFormData(title, body)
+
+		if len(errors) == 0 {
+			// 4.2 表单验证通过，更新数据
+			article := article_modle.Article{
+				ID:    types.StringToInt64(id),
+				Title: title,
+				Body:  body,
+			}
+			i, err := article.Update()
+			if err != nil {
+				logger.LogError(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write(entity.ReturnJson("文章更改失败", nil))
+			}
+
+			// √ 更新成功，跳转到文章详情页
+			if i > 0 {
+				w.Write(entity.ReturnJson("文章更改成功", article))
+			} else {
+				w.Write(entity.ReturnJson("文章没有任何改动", article))
+			}
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(entity.ReturnJson("参数错误", errors))
+		}
 	}
 }
 
