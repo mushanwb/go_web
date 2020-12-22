@@ -34,35 +34,6 @@ func ReturnJson(message string, data interface{}) []byte {
 	return jsonData
 }
 
-func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
-	// 使用这种方法，可以将接收的 application/json 数据转化为 map
-	//param, _ := ioutil.ReadAll(r.Body)
-	//m := make(map[string]interface{})
-	//json.Unmarshal(param, &m)
-
-	// 使用下面的方法，将只能接收 from-data 或者 application/x-www-form-urlencoded 格式数据
-	// 接收不到 application/json 数据
-	title := r.PostFormValue("title")
-	body := r.PostFormValue("body")
-
-	errors := validateArticleFormData(title, body)
-
-	// 检查是否有错误
-	if len(errors) == 0 {
-		lastInsertID, err := saveArticleToDB(title, body)
-		if lastInsertID > 0 {
-			w.Write(ReturnJson("插入文章成功", Article{lastInsertID, title, body}))
-		} else {
-			logger.LogError(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write(ReturnJson("插入文章失败", nil))
-		}
-	} else {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(ReturnJson("请求参数错误", errors))
-	}
-}
-
 func saveArticleToDB(title string, body string) (int64, error) {
 	// 变量初始化
 	var (
@@ -251,7 +222,6 @@ func main() {
 	router := bootstrap.SetupRoute()
 
 	// 同名的路由,根据请求的方式不同，选择进入不同的函数
-	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store")
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesUpdateHandler).Methods("PUT").Name("articles.update")
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesDeleteHandler).Methods("DELETE").Name("articles.delete")
 

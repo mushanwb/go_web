@@ -10,5 +10,6 @@ func RegisterApiRoutes(r *mux.Router) {
 
 	r.HandleFunc("/articles/{id:[0-9]+}", ac.ArticlesShowHandler).Methods("GET").Name("home")
 	r.HandleFunc("/articles", ac.ArticlesIndexHandler).Methods("GET").Name("home")
+	r.HandleFunc("/articles", ac.ArticlesStoreHandler).Methods("POST").Name("articles.store")
 
 }

@@ -7,6 +7,7 @@ import (
 	"go_web/pkg/logger"
 	"go_web/pkg/route"
 	"net/http"
+	"unicode/utf8"
 )
 
 type ArticleController struct {
@@ -50,4 +51,58 @@ func (*ArticleController) ArticlesIndexHandler(w http.ResponseWriter, r *http.Re
 		w.Write(entity.ReturnJson("文章列表查询成功", articles))
 	}
 
+}
+
+func (*ArticleController) ArticlesStoreHandler(w http.ResponseWriter, r *http.Request) {
+	// 使用这种方法，可以将接收的 application/json 数据转化为 map
+	//param, _ := ioutil.ReadAll(r.Body)
+	//m := make(map[string]interface{})
+	//json.Unmarshal(param, &m)
+
+	// 使用下面的方法，将只能接收 from-data 或者 application/x-www-form-urlencoded 格式数据
+	// 接收不到 application/json 数据
+	title := r.PostFormValue("title")
+	body := r.PostFormValue("body")
+
+	errors := validateArticleFormData(title, body)
+
+	// 检查是否有错误
+	if len(errors) == 0 {
+
+		article := article_modle.Article{
+			Title: title,
+			Body:  body,
+		}
+
+		err := article.Create()
+
+		if err == nil {
+			w.Write(entity.ReturnJson("插入文章成功", article))
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(entity.ReturnJson("插入文章失败", nil))
+		}
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(entity.ReturnJson("请求参数错误", errors))
+	}
+}
+
+func validateArticleFormData(title string, body string) map[string]string {
+	errors := make(map[string]string)
+	// 验证标题
+	if title == "" {
+		errors["title"] = "标题不能为空"
+	} else if utf8.RuneCountInString(title) < 3 || utf8.RuneCountInString(title) > 40 {
+		errors["title"] = "标题长度需介于 3-40"
+	}
+
+	// 验证内容
+	if body == "" {
+		errors["body"] = "内容不能为空"
+	} else if utf8.RuneCountInString(body) < 10 {
+		errors["body"] = "内容长度需大于或等于 10 个字节"
+	}
+
+	return errors
 }
