@@ -6,8 +6,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"go_web/bootstrap"
 	"go_web/database"
-	"go_web/pkg/logger"
-	"go_web/pkg/route"
 	"go_web/pkg/types"
 	"net/http"
 	"strings"
@@ -75,42 +73,6 @@ func getArticleByID(id string) (Article, error) {
 	return article, err
 }
 
-func articlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	id := route.GetRouteVariable("id", r)
-
-	article, err := getArticleByID(id)
-
-	// 如果出现错误
-	if err != nil {
-		if err == sql.ErrNoRows {
-			// 3.1 数据未找到
-			w.WriteHeader(http.StatusNotFound)
-			w.Write(ReturnJson("文章不存在", nil))
-		} else {
-			// 3.2 数据库错误
-			logger.LogError(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write(ReturnJson("文章查询失败", nil))
-		}
-	} else {
-		rowsAffected, err := article.Delete()
-
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write(ReturnJson("删除文章失败", nil))
-		} else {
-			// 4.2 未发生错误
-			if rowsAffected > 0 {
-				w.Write(ReturnJson("文章删除成功", article))
-			} else {
-				// Edge case
-				w.WriteHeader(http.StatusNotFound)
-				w.Write(ReturnJson("文章不存在", nil))
-			}
-		}
-	}
-}
-
 func (a Article) Delete() (rowsAffected int64, err error) {
 	rs, err := db.Exec("DELETE FROM articles WHERE id = " + types.Int64ToString(a.ID))
 	if err != nil {
@@ -171,9 +133,6 @@ func main() {
 
 	bootstrap.SetupDB()
 	router := bootstrap.SetupRoute()
-
-	// 同名的路由,根据请求的方式不同，选择进入不同的函数
-	router.HandleFunc("/articles/{id:[0-9]+}", articlesDeleteHandler).Methods("DELETE").Name("articles.delete")
 
 	// 中间件：强制内容类型为 JSON
 	router.Use(forceHTMLMiddleware)

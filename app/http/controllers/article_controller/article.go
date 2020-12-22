@@ -1,12 +1,12 @@
 package article_controller
 
 import (
-	"database/sql"
 	"go_web/app/http/entity"
 	"go_web/app/http/modles/article_modle"
 	"go_web/pkg/logger"
 	"go_web/pkg/route"
 	"go_web/pkg/types"
+	"gorm.io/gorm"
 	"net/http"
 	"unicode/utf8"
 )
@@ -23,7 +23,7 @@ func (*ArticleController) ArticlesShowHandler(w http.ResponseWriter, r *http.Req
 
 	// 如果出现错误
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == gorm.ErrRecordNotFound {
 			// 数据没找到
 			w.WriteHeader(http.StatusNotFound)
 			w.Write(entity.ReturnJson("文章不存在", nil))
@@ -96,7 +96,7 @@ func (*ArticleController) ArticlesUpdateHandler(w http.ResponseWriter, r *http.R
 
 	// 如果出现错误
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == gorm.ErrRecordNotFound {
 			// 3.1 数据未找到
 			w.WriteHeader(http.StatusNotFound)
 			w.Write(entity.ReturnJson("文章不存在", nil))
@@ -136,6 +136,40 @@ func (*ArticleController) ArticlesUpdateHandler(w http.ResponseWriter, r *http.R
 		} else {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write(entity.ReturnJson("参数错误", errors))
+		}
+	}
+}
+
+func (*ArticleController) ArticlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	id := route.GetRouteVariable("id", r)
+
+	_, err := article_modle.Get(id)
+
+	// 如果出现错误
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// 3.1 数据未找到
+			w.WriteHeader(http.StatusNotFound)
+			w.Write(entity.ReturnJson("文章不存在", nil))
+		} else {
+			// 3.2 数据库错误
+			logger.LogError(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(entity.ReturnJson("文章查询失败", nil))
+		}
+	} else {
+		article := article_modle.Article{
+			ID: types.StringToInt64(id),
+		}
+
+		_, err := article.Delete()
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(entity.ReturnJson("删除文章失败", nil))
+		} else {
+			// 4.2 未发生错误
+			w.Write(entity.ReturnJson("文章删除成功", article))
 		}
 	}
 }
