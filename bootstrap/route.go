@@ -8,5 +8,6 @@ import (
 func SetupRoute() *mux.Router {
 	router := mux.NewRouter()
 	route.RegisterWebRoutes(router)
+	route.RegisterApiRoutes(router)
 	return router
 }

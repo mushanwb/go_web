@@ -1,4 +1,4 @@
-package article
+package article_modle
 
 import (
 	"go_web/pkg/model"
@@ -7,9 +7,9 @@ import (
 
 // Article 文章模型
 type Article struct {
-	ID    int64
-	Title string
-	Body  string
+	ID    int64  `json:"id"`
+	Title string `json:"title"`
+	Body  string `json:"body"`
 }
 
 func Get(idstr string) (Article, error) {

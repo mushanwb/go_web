@@ -7,44 +7,14 @@ import (
 	"go_web/bootstrap"
 	"go_web/database"
 	"go_web/pkg/logger"
+	"go_web/pkg/route"
 	"go_web/pkg/types"
-	"go_web/route"
 	"net/http"
 	"strings"
 	"unicode/utf8"
 )
 
 var db *sql.DB
-
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write(ReturnJson("首页访问", nil))
-}
-
-func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
-	// 获取 url 上的 id 参数
-	id := route.GetRouteVariable("id", r)
-
-	// 读取对应文章的数据
-	article, err := getArticleByID(id)
-
-	// 如果出现错误
-	if err != nil {
-		if err == sql.ErrNoRows {
-			// 数据没找到
-			w.WriteHeader(http.StatusNotFound)
-			w.Write(ReturnJson("文章不存在", nil))
-		} else {
-			// 数据库错误
-			logger.LogError(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write(ReturnJson("查询文章失败", nil))
-		}
-	} else {
-		// 4. 读取成功，显示文章
-		logger.LogError(err)
-		w.Write(ReturnJson("请求成功", article))
-	}
-}
 
 // Article  对应一条文章数据
 type Article struct {
@@ -74,7 +44,7 @@ func articlesIndexHandler(w http.ResponseWriter, r *http.Request) {
 	// 循环读取结果
 	for rows.Next() {
 		var article Article
-		// 扫码每一行结果并赋值到一个 article 对象中
+		// 扫码每一行结果并赋值到一个 article_modle 对象中
 		err := rows.Scan(&article.ID, &article.Title, &article.Body)
 		logger.LogError(err)
 		articles = append(articles, article)
@@ -301,9 +271,6 @@ func main() {
 
 	bootstrap.SetupDB()
 	router := bootstrap.SetupRoute()
-
-	// 取 文章id 可以使用路由正则匹配
-	router.HandleFunc("/articles/{id:[0-9]+}", articlesShowHandler).Methods("GET").Name("articles.show")
 
 	// 同名的路由,根据请求的方式不同，选择进入不同的函数
 	router.HandleFunc("/articles", articlesIndexHandler).Methods("GET").Name("articles.index")
