@@ -299,6 +299,7 @@ func main() {
 	database.Initialize()
 	db = database.DB
 
+	bootstrap.SetupDB()
 	router := bootstrap.SetupRoute()
 
 	// 取 文章id 可以使用路由正则匹配
