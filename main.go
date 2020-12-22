@@ -34,28 +34,6 @@ func ReturnJson(message string, data interface{}) []byte {
 	return jsonData
 }
 
-func articlesIndexHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("select * from articles")
-	logger.LogError(err)
-	defer rows.Close()
-
-	var articles []Article
-
-	// 循环读取结果
-	for rows.Next() {
-		var article Article
-		// 扫码每一行结果并赋值到一个 article_modle 对象中
-		err := rows.Scan(&article.ID, &article.Title, &article.Body)
-		logger.LogError(err)
-		articles = append(articles, article)
-	}
-
-	// 检测遍历时是否发生错误
-	err = rows.Err()
-	logger.LogError(err)
-	w.Write(ReturnJson("文章列表查询成功", articles))
-}
-
 func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
 	// 使用这种方法，可以将接收的 application/json 数据转化为 map
 	//param, _ := ioutil.ReadAll(r.Body)
@@ -273,7 +251,6 @@ func main() {
 	router := bootstrap.SetupRoute()
 
 	// 同名的路由,根据请求的方式不同，选择进入不同的函数
-	router.HandleFunc("/articles", articlesIndexHandler).Methods("GET").Name("articles.index")
 	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store")
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesUpdateHandler).Methods("PUT").Name("articles.update")
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesDeleteHandler).Methods("DELETE").Name("articles.delete")

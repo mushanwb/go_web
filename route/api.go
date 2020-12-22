@@ -7,5 +7,8 @@ import (
 
 func RegisterApiRoutes(r *mux.Router) {
 	ac := new(article_controller.ArticleController)
+
 	r.HandleFunc("/articles/{id:[0-9]+}", ac.ArticlesShowHandler).Methods("GET").Name("home")
+	r.HandleFunc("/articles", ac.ArticlesIndexHandler).Methods("GET").Name("home")
+
 }

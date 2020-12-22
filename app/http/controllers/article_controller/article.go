@@ -37,3 +37,17 @@ func (*ArticleController) ArticlesShowHandler(w http.ResponseWriter, r *http.Req
 		w.Write(entity.ReturnJson("请求成功", article))
 	}
 }
+
+func (*ArticleController) ArticlesIndexHandler(w http.ResponseWriter, r *http.Request) {
+	articles, err := article_modle.GetAll()
+
+	if err != nil {
+		// 数据库错误
+		logger.LogError(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(entity.ReturnJson("查询文章列表失败", nil))
+	} else {
+		w.Write(entity.ReturnJson("文章列表查询成功", articles))
+	}
+
+}
