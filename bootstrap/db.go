@@ -1,7 +1,9 @@
 package bootstrap
 
 import (
+	"go_web/app/http/models/article_model"
 	"go_web/pkg/model"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -21,4 +23,15 @@ func SetupDB() {
 	// 设置每个链接的过期时间
 	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
+	// 创建和维护数据表结构
+	migration(db)
+
+}
+
+func migration(db *gorm.DB) {
+
+	// 自动迁移
+	db.AutoMigrate(
+		&article_model.Article{},
+	)
 }

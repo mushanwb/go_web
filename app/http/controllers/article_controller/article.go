@@ -2,12 +2,14 @@ package article_controller
 
 import (
 	"go_web/app/http/entity"
-	"go_web/app/http/modles/article_modle"
+	"go_web/app/http/models"
+	"go_web/app/http/models/article_model"
 	"go_web/pkg/logger"
 	"go_web/pkg/route"
 	"go_web/pkg/types"
 	"gorm.io/gorm"
 	"net/http"
+	"time"
 	"unicode/utf8"
 )
 
@@ -19,7 +21,7 @@ func (*ArticleController) ArticlesShowHandler(w http.ResponseWriter, r *http.Req
 	id := route.GetRouteVariable("id", r)
 
 	// 读取对应文章的数据
-	article, err := article_modle.Get(id)
+	article, err := article_model.Get(id)
 
 	// 如果出现错误
 	if err != nil {
@@ -41,7 +43,7 @@ func (*ArticleController) ArticlesShowHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (*ArticleController) ArticlesIndexHandler(w http.ResponseWriter, r *http.Request) {
-	articles, err := article_modle.GetAll()
+	articles, err := article_model.GetAll()
 
 	if err != nil {
 		// 数据库错误
@@ -70,7 +72,7 @@ func (*ArticleController) ArticlesStoreHandler(w http.ResponseWriter, r *http.Re
 	// 检查是否有错误
 	if len(errors) == 0 {
 
-		article := article_modle.Article{
+		article := article_model.Article{
 			Title: title,
 			Body:  body,
 		}
@@ -92,7 +94,7 @@ func (*ArticleController) ArticlesStoreHandler(w http.ResponseWriter, r *http.Re
 func (*ArticleController) ArticlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	id := route.GetRouteVariable("id", r)
 
-	_, err := article_modle.Get(id)
+	oldArticle, err := article_model.Get(id)
 
 	// 如果出现错误
 	if err != nil {
@@ -115,10 +117,15 @@ func (*ArticleController) ArticlesUpdateHandler(w http.ResponseWriter, r *http.R
 
 		if len(errors) == 0 {
 			// 4.2 表单验证通过，更新数据
-			article := article_modle.Article{
-				ID:    types.StringToInt64(id),
-				Title: title,
-				Body:  body,
+			baseModel := models.BaseModel{
+				ID:        types.StringToInt64(id),
+				CreatedAt: oldArticle.CreatedAt,
+				UpdatedAt: time.Now().Unix(),
+			}
+			article := article_model.Article{
+				BaseModel: baseModel,
+				Title:     title,
+				Body:      body,
 			}
 			i, err := article.Update()
 			if err != nil {
@@ -143,7 +150,7 @@ func (*ArticleController) ArticlesUpdateHandler(w http.ResponseWriter, r *http.R
 func (*ArticleController) ArticlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	id := route.GetRouteVariable("id", r)
 
-	_, err := article_modle.Get(id)
+	article, err := article_model.Get(id)
 
 	// 如果出现错误
 	if err != nil {
@@ -158,10 +165,6 @@ func (*ArticleController) ArticlesDeleteHandler(w http.ResponseWriter, r *http.R
 			w.Write(entity.ReturnJson("文章查询失败", nil))
 		}
 	} else {
-		article := article_modle.Article{
-			ID: types.StringToInt64(id),
-		}
-
 		_, err := article.Delete()
 
 		if err != nil {

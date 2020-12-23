@@ -1,6 +1,7 @@
-package article_modle
+package article_model
 
 import (
+	"go_web/app/http/models"
 	"go_web/pkg/logger"
 	"go_web/pkg/model"
 	"go_web/pkg/types"
@@ -8,7 +9,8 @@ import (
 
 // Article 文章模型
 type Article struct {
-	ID    int64  `json:"id"`
+	models.BaseModel
+
 	Title string `json:"title"`
 	Body  string `json:"body"`
 }
@@ -45,7 +47,7 @@ func (article *Article) Create() (err error) {
 }
 
 func (article *Article) Update() (rowsAffected int64, err error) {
-	result := model.DB.Save(&article)
+	result := model.DB.Updates(&article)
 	if err = result.Error; err != nil {
 		logger.LogError(err)
 		return 0, err
