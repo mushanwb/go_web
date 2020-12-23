@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"go_web/app/http/models/article_model"
+	"go_web/app/http/models/auth_model"
 	"go_web/pkg/model"
 	"gorm.io/gorm"
 	"time"
@@ -33,5 +34,6 @@ func migration(db *gorm.DB) {
 	// 自动迁移
 	db.AutoMigrate(
 		&article_model.Article{},
+		&auth_model.User{},
 	)
 }
