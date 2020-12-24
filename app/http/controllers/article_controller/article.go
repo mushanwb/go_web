@@ -6,7 +6,7 @@ import (
 	"go_web/app/http/models/article_model"
 	"go_web/pkg/logger"
 	"go_web/pkg/route"
-	"go_web/pkg/types"
+	"go_web/pkg/util"
 	"gorm.io/gorm"
 	"net/http"
 	"time"
@@ -118,7 +118,7 @@ func (*ArticleController) ArticlesUpdateHandler(w http.ResponseWriter, r *http.R
 		if len(errors) == 0 {
 			// 4.2 表单验证通过，更新数据
 			baseModel := models.BaseModel{
-				ID:        types.StringToInt64(id),
+				ID:        util.StringToInt64(id),
 				CreatedAt: oldArticle.CreatedAt,
 				UpdatedAt: time.Now().Unix(),
 			}

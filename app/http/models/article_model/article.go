@@ -4,7 +4,7 @@ import (
 	"go_web/app/http/models"
 	"go_web/pkg/logger"
 	"go_web/pkg/model"
-	"go_web/pkg/types"
+	"go_web/pkg/util"
 )
 
 // Article 文章模型
@@ -18,7 +18,7 @@ type Article struct {
 func Get(idstr string) (Article, error) {
 	var article Article
 
-	id := types.StringToInt64(idstr)
+	id := util.StringToInt64(idstr)
 
 	if err := model.DB.First(&article, id).Error; err != nil {
 		return article, err

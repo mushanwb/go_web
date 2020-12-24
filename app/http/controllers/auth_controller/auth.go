@@ -4,6 +4,7 @@ import (
 	"go_web/app/http/entity"
 	"go_web/app/http/models/auth_model"
 	"go_web/app/requests"
+	"go_web/pkg/util"
 	"net/http"
 )
 
@@ -24,10 +25,11 @@ func (*AuthController) DoRegister(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(entity.ReturnJson("请求参数错误", errors))
 	} else {
+		passwordHash := util.Hash(userFromData.Password)
 		user := auth_model.User{
 			Name:     userFromData.Name,
 			Email:    userFromData.Email,
-			Password: userFromData.Password,
+			Password: passwordHash,
 		}
 		_user, _ := user.GetUserByNameOrEmail()
 		if _user.ID != 0 {
