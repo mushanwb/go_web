@@ -21,3 +21,13 @@ func (user *User) Create() (err error) {
 	}
 	return nil
 }
+
+func (user *User) GetUserByNameOrEmail() (User, error) {
+	var _user User
+	err := model.DB.Where("name = ?", user.Name).Or("email = ?", user.Email).First(&_user).Error
+	if err != nil {
+		logger.LogError(err)
+		return _user, err
+	}
+	return _user, nil
+}

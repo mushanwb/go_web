@@ -29,14 +29,20 @@ func (*AuthController) DoRegister(w http.ResponseWriter, r *http.Request) {
 			Email:    userFromData.Email,
 			Password: userFromData.Password,
 		}
-
-		err := user.Create()
-
-		if err == nil {
-			w.Write(entity.ReturnJson("用户注册成功", user))
+		_user, _ := user.GetUserByNameOrEmail()
+		if _user.ID != 0 {
+			w.WriteHeader(http.StatusConflict)
+			w.Write(entity.ReturnJson("名称或邮箱已经被创建", nil))
 		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write(entity.ReturnJson("注册用户失败", nil))
+			errCreate := user.Create()
+
+			if errCreate == nil {
+				w.Write(entity.ReturnJson("用户注册成功", user))
+			} else {
+
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write(entity.ReturnJson("注册用户失败", nil))
+			}
 		}
 	}
 
