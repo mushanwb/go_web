@@ -3,6 +3,7 @@ package auth_controller
 import (
 	"go_web/app/http/entity"
 	"go_web/app/http/models/auth_model"
+	"go_web/app/requests"
 	"net/http"
 )
 
@@ -11,20 +12,22 @@ type AuthController struct {
 
 func (*AuthController) DoRegister(w http.ResponseWriter, r *http.Request) {
 
-	name := r.PostFormValue("name")
-	email := r.PostFormValue("email")
-	password := r.PostFormValue("password")
+	userFromData := requests.RegisterFromData{
+		Name:     r.PostFormValue("name"),
+		Email:    r.PostFormValue("email"),
+		Password: r.PostFormValue("password"),
+	}
 
-	errors := validateUserFormData(name, email, password)
+	errors := requests.ValidateRegisterFrom(userFromData)
 
-	if len(errors) != 0 {
+	if len(errors) > 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(entity.ReturnJson("请求参数错误", errors))
 	} else {
 		user := auth_model.User{
-			Name:     name,
-			Email:    email,
-			Password: password,
+			Name:     userFromData.Name,
+			Email:    userFromData.Email,
+			Password: userFromData.Password,
 		}
 
 		err := user.Create()
@@ -37,21 +40,4 @@ func (*AuthController) DoRegister(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-}
-
-func validateUserFormData(name string, email string, password string) map[string]string {
-	errors := make(map[string]string)
-
-	if name == "" {
-		errors["name"] = "名字不能为空"
-	}
-
-	if email == "" {
-		errors["email"] = "邮箱不能为空"
-	}
-
-	if password == "" {
-		errors["password"] = "密码不能为空"
-	}
-	return errors
 }
