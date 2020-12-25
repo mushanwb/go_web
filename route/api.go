@@ -4,9 +4,13 @@ import (
 	"github.com/gorilla/mux"
 	"go_web/app/http/controllers/article_controller"
 	"go_web/app/http/controllers/auth_controller"
+	"go_web/app/http/middlewares"
 )
 
 func RegisterApiRoutes(r *mux.Router) {
+	// 路由前缀
+	r = r.PathPrefix("/api").Subrouter()
+
 	ac := new(article_controller.ArticleController)
 
 	// 通过命名路由获取 URL 示例
@@ -25,4 +29,6 @@ func RegisterApiRoutes(r *mux.Router) {
 	auth := new(auth_controller.AuthController)
 	r.HandleFunc("/register", auth.DoRegister).Methods("POST")
 
+	// 中间件：强制内容类型为 JSON
+	r.Use(middlewares.ForceJson)
 }

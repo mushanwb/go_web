@@ -10,7 +10,6 @@ type PagesController struct {
 }
 
 func (*PagesController) Home(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	fmt.Fprint(w, "<h1>首页访问</h1><p>go_web 首页内容</p>")
 }
 
