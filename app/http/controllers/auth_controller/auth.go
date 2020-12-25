@@ -49,3 +49,23 @@ func (*AuthController) DoRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+func (*AuthController) Login(w http.ResponseWriter, r *http.Request) {
+	loginFromData := requests.LoginFromData{
+		Email:    r.PostFormValue("email"),
+		Password: r.PostFormValue("password"),
+	}
+
+	errors := requests.ValidateLoginFrom(loginFromData)
+	user := auth_model.User{
+		Email: loginFromData.Email,
+	}
+
+	if len(errors) == 0 {
+		_user, err := user.GetUserByNameOrEmail()
+
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(entity.ReturnJson("请求参数错误", errors))
+	}
+}
