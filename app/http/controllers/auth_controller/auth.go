@@ -50,8 +50,6 @@ func (*AuthController) DoRegister(w http.ResponseWriter, r *http.Request) {
 
 }
 
-var jwtkey = []byte("www.topgoer.com")
-
 func (*AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	loginFromData := requests.LoginFromData{
 		Email:    r.PostFormValue("email"),
