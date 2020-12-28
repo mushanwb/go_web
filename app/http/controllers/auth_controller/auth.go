@@ -63,7 +63,12 @@ func (*AuthController) Login(w http.ResponseWriter, r *http.Request) {
 
 	if len(errors) == 0 {
 		_user, err := user.GetUserByNameOrEmail()
-
+		if err == nil && util.CheckHash(loginFromData.Password, _user.Password) {
+			w.Write(entity.ReturnJson("登录成功", _user))
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(entity.ReturnJson("账号或者密码错误", nil))
+		}
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(entity.ReturnJson("请求参数错误", errors))

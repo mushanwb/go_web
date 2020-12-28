@@ -28,6 +28,7 @@ func RegisterApiRoutes(r *mux.Router) {
 
 	auth := new(auth_controller.AuthController)
 	r.HandleFunc("/register", auth.DoRegister).Methods("POST")
+	r.HandleFunc("/login", auth.Login).Methods("POST")
 
 	// 中间件：强制内容类型为 JSON
 	r.Use(middlewares.ForceJson)

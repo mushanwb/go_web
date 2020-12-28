@@ -26,6 +26,6 @@ func ValidateRegisterFrom(userFromData RegisterFromData) map[string][]string {
 		"password": baseRequest.PasswordMessages(),
 	}
 
-	return baseRequest.Options(userFromData, rules, messages)
+	return baseRequest.Options(&userFromData, rules, messages)
 
 }

@@ -12,7 +12,7 @@ func ValidateLoginFrom(loginFromData LoginFromData) map[string][]string {
 	// 1. 定制认证规则
 	rules := govalidator.MapData{
 		"email":    baseRequest.EmailRules(),
-		"password": baseRequest.EmailRules(),
+		"password": baseRequest.PasswordRules(),
 	}
 
 	// 2. 定制错误消息
@@ -21,5 +21,5 @@ func ValidateLoginFrom(loginFromData LoginFromData) map[string][]string {
 		"password": baseRequest.PasswordMessages(),
 	}
 
-	return baseRequest.Options(loginFromData, rules, messages)
+	return baseRequest.Options(&loginFromData, rules, messages)
 }
