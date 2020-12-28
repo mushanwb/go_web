@@ -2,6 +2,7 @@ package entity
 
 import (
 	"github.com/dgrijalva/jwt-go"
+	"go_web/app/http/models"
 	"go_web/app/http/models/auth_model"
 	"go_web/pkg/logger"
 	"time"
@@ -32,4 +33,26 @@ func JwtGetToken(user auth_model.User) string {
 		logger.LogError(err)
 	}
 	return tokenString
+}
+
+func ParseToken(tokenString string) (auth_model.User, bool) {
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		return auth_model.User{}, false
+	}
+
+	user := auth_model.User{
+		BaseModel: models.BaseModel{
+			ID: claims.UserId,
+		},
+	}
+	_user, err := user.GetUserById()
+	if err != nil {
+		return _user, false
+	}
+	return _user, true
 }

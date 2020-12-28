@@ -36,3 +36,12 @@ func (user *User) GetUserByNameOrEmail() (User, error) {
 	}
 	return _user, nil
 }
+
+func (user *User) GetUserById() (User, error) {
+	var _user User
+	if err := model.DB.First(_user, user.ID).Error; err != nil {
+		logger.LogError(err)
+		return _user, err
+	}
+	return _user, nil
+}
