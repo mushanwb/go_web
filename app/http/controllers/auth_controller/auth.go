@@ -50,6 +50,8 @@ func (*AuthController) DoRegister(w http.ResponseWriter, r *http.Request) {
 
 }
 
+var jwtkey = []byte("www.topgoer.com")
+
 func (*AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	loginFromData := requests.LoginFromData{
 		Email:    r.PostFormValue("email"),
@@ -64,7 +66,12 @@ func (*AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	if len(errors) == 0 {
 		_user, err := user.GetUserByNameOrEmail()
 		if err == nil && util.CheckHash(loginFromData.Password, _user.Password) {
-			w.Write(entity.ReturnJson("登录成功", _user))
+			token := entity.JwtGetToken(_user)
+			loginInfo := auth_model.LoginInfo{
+				User:  _user,
+				Token: token,
+			}
+			w.Write(entity.ReturnJson("登录成功", loginInfo))
 		} else {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write(entity.ReturnJson("账号或者密码错误", nil))

@@ -14,6 +14,11 @@ type User struct {
 	Password string `gorm:"column:password;type:varchar(255);" json:"-"`
 }
 
+type LoginInfo struct {
+	User  User   `json:"user"`
+	Token string `json:"token"`
+}
+
 func (user *User) Create() (err error) {
 	if err = model.DB.Create(&user).Error; err != nil {
 		logger.LogError(err)
