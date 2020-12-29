@@ -1,7 +1,6 @@
 package article_controller
 
 import (
-	"fmt"
 	"go_web/app/http/entity"
 	"go_web/app/http/models"
 	"go_web/app/http/models/article_model"
@@ -10,7 +9,6 @@ import (
 	"go_web/pkg/util"
 	"gorm.io/gorm"
 	"net/http"
-	"reflect"
 	"time"
 	"unicode/utf8"
 )
@@ -21,9 +19,6 @@ type ArticleController struct {
 func (*ArticleController) ArticlesShowHandler(w http.ResponseWriter, r *http.Request) {
 	// 获取 url 上的 id 参数
 	id := route.GetRouteVariable("id", r)
-	user := r.Context().Value("user")
-	//_user := json.Unmarshal([]byte(user), &auth_model.User{})
-	fmt.Println(reflect.TypeOf(user)) //
 	// 读取对应文章的数据
 	article, err := article_model.Get(id)
 
