@@ -19,7 +19,7 @@ func RegisterApiRoutes(r *mux.Router) {
 	//articleURL, _ := router.Get("articles.show").URL("id", "23")
 	//fmt.Println("articleURL: ", articleURL)
 
-	r.HandleFunc("/articles/{id:[0-9]+}", ac.ArticlesShowHandler).Methods("GET").Name("home")
+	r.HandleFunc("/articles/{id:[0-9]+}", middlewares.JwtAuth(ac.ArticlesShowHandler)).Methods("GET").Name("home")
 	r.HandleFunc("/articles", ac.ArticlesIndexHandler).Methods("GET").Name("home")
 	r.HandleFunc("/articles", ac.ArticlesStoreHandler).Methods("POST").Name("articles.store")
 	r.HandleFunc("/articles/{id:[0-9]+}", ac.ArticlesUpdateHandler).Methods("PUT").Name("articles.update")

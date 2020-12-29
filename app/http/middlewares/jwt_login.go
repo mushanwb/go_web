@@ -2,12 +2,13 @@ package middlewares
 
 import (
 	"context"
+	"fmt"
 	"go_web/app/http/entity"
 	"net/http"
 )
 
-func JwtAuth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func JwtAuth(next HttpHandlerFunc) HttpHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("token")
 		if token == "" {
 			w.WriteHeader(http.StatusBadRequest)
@@ -21,8 +22,9 @@ func JwtAuth(next http.Handler) http.Handler {
 			w.Write(entity.ReturnJson("token 验证失败", nil))
 			return
 		}
+		fmt.Println(user)
 		ctx := context.WithValue(r.Context(), "user", user)
 		// 继续处理请求
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+		next(w, r.WithContext(ctx))
+	}
 }
