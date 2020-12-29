@@ -1,17 +1,19 @@
 package config
 
+import "go_web/pkg/config"
+
 func init() {
-	Add("app", StrMap{
+	config.Add("app", config.StrMap{
 		// 应用名称，暂时没有使用到
-		"name": Env("APP_NAME", ""),
+		"name": config.Env("APP_NAME", "GoWeb"),
 
 		// 当前环境，用以区分多环境
-		"env": Env("APP_ENV", "production"),
+		"env": config.Env("APP_ENV", "production"),
 
 		// 是否进入调试模式
-		"debug": Env("APP_DEBUG", false),
+		"debug": config.Env("APP_DEBUG", false),
 
 		// 应用服务端口
-		"port": Env("APP_PORT", "3000"),
+		"port": config.Env("APP_PORT", "3000"),
 	})
 }
