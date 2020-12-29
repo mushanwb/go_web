@@ -3,7 +3,7 @@ package config
 func init() {
 	Add("app", StrMap{
 		// 应用名称，暂时没有使用到
-		"name": Env("APP_NAME", "GoWeb"),
+		"name": Env("APP_NAME", ""),
 
 		// 当前环境，用以区分多环境
 		"env": Env("APP_ENV", "production"),
